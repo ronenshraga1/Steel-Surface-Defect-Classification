@@ -67,7 +67,7 @@ I used Grad-CAM on MobileNetV2's `out_relu` feature maps to inspect one correct 
 
 ## Streamlit demo
 
-The [Streamlit app](app.py) provides a small demo of the saved model. It accepts a JPG or PNG image and shows the predicted class, scores for all six classes, and a Grad-CAM overlay. It needs [the trained model](steel_defect_transfer.keras) and `class_names.json` in the project directory.
+The [Streamlit app](app.py) provides a small demo of the saved model. Upload a JPG or PNG image, or click **Try Demo Image** to use the included [metal.png](metal.png). The app shows the predicted class, scores for all six classes, and a Grad-CAM overlay. It needs [the trained model](steel_defect_transfer.keras) and `class_names.json` in the project directory.
 
 ```bash
 pip install -r requirements.txt

@@ -16,6 +16,7 @@ from tensorflow import keras
 PROJECT_DIR = Path(__file__).resolve().parent
 MODEL_PATH = PROJECT_DIR / "steel_defect_transfer.keras"
 CLASS_NAMES_PATH = PROJECT_DIR / "class_names.json"
+DEMO_IMAGE_PATH = PROJECT_DIR / "metal.png"
 IMAGE_SIZE = (200, 200)
 
 
@@ -169,13 +170,41 @@ def main():
 
     st.subheader("Classify an image")
     uploaded_file = st.file_uploader("Choose a JPG, JPEG, or PNG image", type=["jpg", "jpeg", "png"])
+    st.write("Don't have a steel surface image? Try our demo image.")
+    use_demo = st.button("Try Demo Image")
+
+    upload_bytes = uploaded_file.getvalue() if uploaded_file is not None else None
+    upload_id = (
+        uploaded_file.name,
+        hashlib.sha256(upload_bytes).hexdigest(),
+    ) if upload_bytes is not None else None
+    if upload_id != st.session_state.get("last_upload_id"):
+        st.session_state["last_upload_id"] = upload_id
+        if upload_id is not None:
+            st.session_state["image_source"] = "upload"
+        elif st.session_state.get("image_source") == "upload":
+            st.session_state.pop("image_source", None)
+        st.session_state.pop("classification", None)
+    if use_demo:
+        st.session_state["image_source"] = "demo"
+        st.session_state.pop("classification", None)
+
     image = None
     file_key = None
-    if uploaded_file is not None:
-        raw_image = uploaded_file.getvalue()
-        file_key = hashlib.sha256(raw_image).hexdigest()
+    source = st.session_state.get("image_source")
+    if source == "demo":
         try:
+            raw_image = DEMO_IMAGE_PATH.read_bytes()
             image = read_image(raw_image)
+            file_key = hashlib.sha256(raw_image).hexdigest()
+            st.image(image, caption="Demo image (metal.png)", width=360)
+        except (OSError, ValueError, Image.DecompressionBombError) as error:
+            st.session_state.pop("classification", None)
+            st.error(f"Could not load demo image (metal.png): {error}")
+    elif source == "upload" and upload_bytes is not None:
+        try:
+            image = read_image(upload_bytes)
+            file_key = upload_id[1]
         except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError) as error:
             st.error(f"Could not read this image: {error}")
         else:
